@@ -1,11 +1,9 @@
 ---
-title: "Week1"
+title: "homework part1"
 author: "Lin Tian"
 date: "6/3/2015"
 output: html_document
 ---
-
-## Section1
 
 Read data
 
@@ -49,9 +47,33 @@ which.max(table(mvt$Month, mvt$Arrest)[,"TRUE"])
 We can use R to VISUALIZING CRIME TRENDS.
 
 ```{r}
-
+hist(mvt$Year, breaks=100)
+boxplot(mvt$Year ~ mvt$Arrest)
 ```
 
+Proportion of motor vehicle thefts is arrestted
 
+```{r}
+## 2001
+prop.table(table(mvt[mvt$Year==2001, "Arrest"]))
+## 2007
+prop.table(table(mvt[mvt$Year==2007, "Arrest"]))
+## 2012
+prop.table(table(mvt[mvt$Year==2012, "Arrest"]))
+```
+
+Popular Locations
+
+```{r}
+head(sort(table(mvt$LocationDescription), decreasing=TRUE))
+PopularLocations <- names(head(sort(table(mvt$LocationDescription), decreasing=TRUE)))
+PopularLocations <- PopularLocations[-3]
+Top5 <- mvt[mvt$LocationDescription %in% PopularLocations, ]
+Top5$LocationDescription = factor(Top5$LocationDescription)
+dim(Top5)
+prop.table(table(Top5$LocationDescription, Top5$Arrest), 1)
+which.max(table(mvt[mvt$LocationDescription=="GAS STATION", "Weekday"]))
+which.min(table(mvt[mvt$LocationDescription=="DRIVEWAY - RESIDENTIAL", "Weekday"]))
+```
 
 
