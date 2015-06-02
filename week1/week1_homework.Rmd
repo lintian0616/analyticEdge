@@ -1,0 +1,57 @@
+---
+title: "Week1"
+author: "Lin Tian"
+date: "6/3/2015"
+output: html_document
+---
+
+## Section1
+
+Read data
+
+```{r}
+mvt <- read.csv("~/analyticEdge/week1/mvtWeek1.csv", as.is=TRUE)
+dim(mvt)
+
+## Maximum value of ID
+max(mvt$ID)
+
+## Minimum value of Beats
+min(mvt$Beat)
+
+## TRUE in the Arrest variable
+sum(mvt$Arrest==TRUE)
+
+## LocationDescription value of ALLEY
+sum(mvt$LocationDescription=="ALLEY")
+```
+
+We can do the data conversion using R.
+
+```{r}
+DateConvert <- as.Date(strptime(mvt$Date, "%m/%d/%y %H:%M"))
+median(DateConvert)
+
+## extract the month and the day of the week
+mvt$Month = months(DateConvert)
+mvt$Weekday = weekdays(DateConvert)
+## replace the old Date variable with DateConvert
+mvt$Date = DateConvert
+
+## fewest motor vehicle thefts month
+which.min(table(mvt$Month))
+## most motor vehicle thefts weekday
+which.max(table(mvt$Weekday))
+## month that has the largest number of motor vehicle thefts for which an arrest was made
+which.max(table(mvt$Month, mvt$Arrest)[,"TRUE"])
+```
+
+We can use R to VISUALIZING CRIME TRENDS.
+
+```{r}
+
+```
+
+
+
+
