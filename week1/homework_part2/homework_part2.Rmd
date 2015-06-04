@@ -32,4 +32,22 @@ plot(CocaCola$Date, CocaCola$StockPrice, type="l")
 lines(ProcterGamble$Date, ProcterGamble$StockPrice, col="red")
 abline(v=as.Date(c("2000-03-01")), lwd=2)
 abline(v=as.Date(c("1983-03-01")), col="blue")
+## Compare all five companies
+plot(CocaCola$Date[301:432], CocaCola$StockPrice[301:432], type="l", col="red", ylim=c(0,210))
+lines(IBM$Date[301:432], IBM$StockPrice[301:432], col="green")
+lines(GE$Date[301:432], GE$StockPrice[301:432], col="blue")
+lines(ProcterGamble$Date[301:432], ProcterGamble$StockPrice[301:432], col="orange")
+lines(Boeing$Date[301:432], Boeing$StockPrice[301:432], col="black")
+abline(v=as.Date(c("1997-09-01")), lwd=2)
+abline(v=as.Date(c("1997-11-01")), lwd=2)
 ```
+
+Compare IBM stock by month
+
+```{r}
+tapply(IBM$StockPrice, months(IBM$Date), mean) > mean(IBM$StockPrice)
+```
+
+
+
+
