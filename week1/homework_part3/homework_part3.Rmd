@@ -1,0 +1,62 @@
+---
+title: "Homework Part3"
+author: "Lin Tian"
+date: "6/6/2015"
+output: html_document
+---
+
+Read data
+
+```{r}
+CPS <- read.csv("CPSData.csv")
+summary(CPS)
+str(CPS)
+which.max(table(as.character(CPS$Industry)))
+sort(table(CPS$Region))
+prop.table(table(CPS$Citizenship))
+table(CPS$Race, CPS$Hispanic)
+lapply(CPS, function(x) any(is.na(x)))
+prop.table(table(CPS$Region, is.na(CPS$Married)), 1)
+prop.table(table(CPS$Sex, is.na(CPS$Married)), 1)
+prop.table(table(CPS$Age, is.na(CPS$Married)), 1)
+prop.table(table(CPS$Citizenship, is.na(CPS$Married)), 2)
+
+sum(table(is.na(CPS$MetroAreaCode), CPS$State)[2, ]==0)
+prop.table(table(is.na(CPS$MetroAreaCode), CPS$Region), 2)
+which.min(abs(prop.table(table(is.na(CPS$MetroAreaCode), CPS$State), 2)[2, ]-0.3))
+sort(prop.table(table(is.na(CPS$MetroAreaCode), CPS$State), 2)[2, ], decreasing = TRUE)
+```
+
+Read other two files:
+
+```{r}
+MetroAreaMap <- read.csv("MetroAreaCodes.csv")
+CountryMap <- read.csv("CountryCodes.csv")
+dim(MetroAreaMap)
+dim(CountryMap)
+```
+
+Merge MetroAreaMap:
+
+```{r}
+CPS <- merge(CPS, MetroAreaMap, by.x="MetroAreaCode", by.y="Code", all.x=TRUE)
+sum(is.na(CPS$MetroArea))
+head(sort(table(CPS$MetroArea), decreasing=TRUE), 10)
+completeCPS <- CPS[complete.cases(CPS), ]
+head(sort(tapply(CPS$Hispanic, CPS$MetroArea, mean), decreasing=TRUE))
+sum(tapply(CPS$Race=="Asian", CPS$MetroArea, mean) >= 0.2, na.rm=TRUE)
+head(sort(tapply(CPS$Education == "No high school diploma", CPS$MetroArea, function(x) mean(x, na.rm=TRUE))))
+```
+
+Merge CountryCodes:
+
+```{r}
+CPS <- merge(CPS, CountryMap, by.x="CountryOfBirthCode", by.y="Code", all.x=TRUE)
+sum(is.na(CPS$Country))
+head(sort(table(CPS$Country), decreasing = TRUE))
+1-tapply(CPS$Country=="United States", CPS$MetroArea, function(x) mean(x, na.rm=TRUE))["New York-Northern New Jersey-Long Island, NY-NJ-PA"]
+head(sort(tapply(CPS$Country=="India", CPS$MetroArea, function(x) sum(x, na.rm=TRUE)), decreasing = TRUE))
+head(sort(tapply(CPS$Country=="Brazil", CPS$MetroArea, function(x) sum(x, na.rm=TRUE)), decreasing = TRUE))
+head(sort(tapply(CPS$Country=="Somalia", CPS$MetroArea, function(x) sum(x, na.rm=TRUE)), decreasing = TRUE))
+```
+

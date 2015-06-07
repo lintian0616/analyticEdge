@@ -1,0 +1,25 @@
+---
+title: "Homework Part4"
+author: "Lin Tian"
+date: "6/6/2015"
+output: html_document
+---
+
+Read data:
+
+```{r}
+poll <- read.csv("AnonymityPoll.csv")
+str(poll)
+summary(poll)
+table(poll$Smartphone)
+table(poll$State, poll$Region)[c("Colorado", "Kansas", "Kentucky", "Missouri", "Ohio", "Pennsylvania"), "Midwest"]
+which.max(table(poll$State, poll$Region)[, "South"])
+table(is.na(poll$Internet.Use), is.na(poll$Smartphone))
+```
+
+
+
+
+
+
+
