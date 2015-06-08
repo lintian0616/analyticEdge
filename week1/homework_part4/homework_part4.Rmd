@@ -14,12 +14,32 @@ summary(poll)
 table(poll$Smartphone)
 table(poll$State, poll$Region)[c("Colorado", "Kansas", "Kentucky", "Missouri", "Ohio", "Pennsylvania"), "Midwest"]
 which.max(table(poll$State, poll$Region)[, "South"])
-table(is.na(poll$Internet.Use), is.na(poll$Smartphone))
+table(poll$Internet.Use==1, poll$Smartphone==1)
 ```
 
+Subset the data
 
+```{r}
+limited <- subset(poll, Internet.Use==1 | Smartphone==1)
+mean(limited$Info.On.Internet)
+sum(limited$Info.On.Internet==0)
+sum(limited$Info.On.Internet==11)
+prop.table(table(limited$Worry.About.Info))
+prop.table(table(limited$Anonymity.Possible))
+prop.table(table(limited$Tried.Masking.Identity))
+prop.table(table(limited$Privacy.Laws.Effective))
+```
 
+Visualization
 
+```{r}
+library(ggplot2)
+ggplot(data=limited, aes(x=Age))+geom_histogram(binwidth=2)
+max(table(limited$Age, limited$Info.On.Internet))
+ggplot(data=limited, aes(x=Age, y=Info.On.Internet))+geom_point()+geom_jitter()+stat_smooth(method="lm")
+tapply(limited$Info.On.Internet, limited$Smartphone, mean)
+tapply(limited$Tried.Masking.Identity, limited$Smartphone, function(x) mean(x, na.rm=TRUE))
+```
 
 
 
