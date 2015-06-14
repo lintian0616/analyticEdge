@@ -1,0 +1,41 @@
+---
+title: "Homework Part1"
+author: "Lin Tian"
+date: "6/14/2015"
+output: html_document
+---
+
+Read data
+
+```{r}
+setwd("~/analyticEdge/week2/homework_part1")
+climate <- read.csv("climate_change.csv")
+climate_train <- subset(climate, Year <= 2006)
+climate_test <- subset(climate, Year > 2006)
+```
+
+Build the linear regression model
+
+```{r}
+TempReg <- lm(Temp ~ MEI + CO2 + CH4 + N2O + CFC.11 + CFC.12 + TSI + Aerosols, data=climate_train)
+summary(TempReg)
+cor(climate_train[, c(3:10)])
+TempReg2 <- lm(Temp ~ MEI + N2O + TSI + Aerosols, data=climate_train)
+summary(TempReg2)
+```
+
+AIC
+
+```{r}
+TempReg_reduced <- step(TempReg)
+```
+
+Apply for test dataset
+
+```{r}
+temp_pred <- predict(TempReg_reduced, newdata=climate_test)
+SSE <- sum((temp_pred - climate_test$Temp)^2)
+SST <- sum((mean(climate_train$Temp) - climate_test$Temp)^2)
+Rsquare_test <- 1 - SSE/SST
+```
+
