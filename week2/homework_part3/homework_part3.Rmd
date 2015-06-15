@@ -1,0 +1,46 @@
+---
+title: "Homework Part3"
+author: "Lin Tian"
+date: "6/14/2015"
+output: html_document
+---
+
+Read data
+
+```{r}
+setwd("~/analyticEdge/week2/homework_part3")
+FluTrain <- read.csv("FluTrain.csv")
+FluTrain$Week[which.max(FluTrain$ILI)]
+FluTrain$Week[which.max(FluTrain$Queries)
+              
+library(ggplot2)
+ggplot(data=FluTrain, aes(x=FluTrain$ILI))+geom_histogram()
+ggplot(data=FluTrain, aes(x=FluTrain$Queries, y=FluTrain$ILI))+geom_point()+scale_y_log10()+geom_smooth(method=lm)
+FluTrend1 <- lm(log(ILI) ~ Queries, data=FluTrain)
+```
+
+Predict the data
+
+```{r}
+FluTest <- read.csv("FluTest.csv")
+PredTest1 <- exp(predict(FluTrend1, newdata=FluTest))
+PredTest1[grep("2012-03-11", FluTest$Week)]
+relativePredError <- ((FluTest$ILI - PredTest1)/FluTest$ILI)[grep("2012-03-11", FluTest$Week)]
+RMSE <- sqrt(sum((PredTest1 - FluTest$ILI)^2)/nrow(FluTest))
+```
+
+Train a time series model
+
+```{r}
+library(zoo)
+FluTrain$ILILag2 <- lag(zoo(FluTrain$ILI), -2, na.pad=TRUE)
+FluTest$ILILag2 <- lag(zoo(FluTest$ILI), -2, na.pad=TRUE)
+FluTest$ILILag2[1:2] <- FluTrain$ILI[(nrow(FluTrain)-1):nrow(FluTrain)]
+ggplot(data=FluTrain, aes(x=ILI, y=ILILag2)) + geom_point() + scale_x_log10() + scale_y_log10()
+FluTrend2 <- lm(log(ILI) ~ Queries + log(ILILag2), data=FluTrain)
+PredTest2 <- exp(predict(FluTrend2, newdata=FluTest))
+RMSE2 <- sqrt(sum((PredTest2 - FluTest$ILI)^2)/nrow(FluTest))
+```
+
+
+

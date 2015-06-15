@@ -1,0 +1,46 @@
+---
+title: "Homework Part2"
+author: "Lin Tian"
+date: "6/14/2015"
+output: html_document
+---
+
+Read data
+
+```{r}
+setwd("~/analyticEdge/week2/homework_part2")
+pisaTrain <- read.csv("pisa2009train.csv")
+pisaTest <- read.csv("pisa2009test.csv")
+tapply(pisaTrain$readingScore, pisaTrain$male, mean)
+apply(pisaTrain, 2, function(x) any(is.na(x)))
+```
+
+Remove na value
+
+```{r}
+pisaTrain <- na.omit(pisaTrain)
+pisaTest <- na.omit(pisaTest)
+dim(pisaTrain)
+dim(pisaTest)
+```
+
+Revelel the race for the linear regression model
+
+```{r}
+pisaTrain$raceeth <- relevel(pisaTrain$raceeth, ref="White")
+pisaTest$raceeth <- relevel(pisaTest$raceeth, ref="White")
+lmScore <- lm(readingScore ~ ., data=pisaTrain)
+RMSE <- sqrt(sum(lmScore$residuals^2)/nrow(pisaTrain))
+```
+
+Predict using built model (**lmScore**)
+
+```{r}
+predTest <- predict(lmScore, newdata=pisaTest)
+SSE_test <- sum((predTest - pisaTest$readingScore)^2)
+RMSE_test <- sqrt(SSE_test/nrow(pisaTest))
+baseLine <- mean(pisaTrain$readingScore)
+SST_test <- sum((baseLine - pisaTest$readingScore)^2)
+R_square <- 1 - SSE_test/SST_test
+```
+

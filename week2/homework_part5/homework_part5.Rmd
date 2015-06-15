@@ -1,0 +1,42 @@
+---
+title: "Homework Part5"
+author: "Lin Tian"
+date: "6/15/2015"
+output: html_document
+---
+
+Read data
+
+```{r}
+setwd("~/analyticEdge/week2/homework_part5")
+elantra <- read.csv("elantra.csv")
+elantraTrain <- subset(elantra, Year <= 2012)
+elantraTest <- subset(elantra, Year > 2012)
+```
+
+Build model
+
+```{r}
+salesReg <- lm(ElantraSales ~ Unemployment + CPI_all + CPI_energy + Queries, data=elantraTrain)
+
+salesReg2 <- lm(ElantraSales ~ Month + Unemployment + CPI_all + CPI_energy + Queries, data=elantraTrain)
+
+elantraTrain$MonthFactor <- as.factor(elantraTrain$Month)
+elantraTest$MonthFactor <- as.factor(elantraTest$Month)
+salesReg3 <- lm(ElantraSales ~ MonthFactor + Unemployment + CPI_all + CPI_energy + Queries, data=elantraTrain)
+cor(elantraTrain[, c("CPI_energy", "Month", "Unemployment", "Queries", "CPI_all")])
+
+salesReg4 <- lm(ElantraSales ~ MonthFactor + Unemployment + CPI_all + CPI_energy, data=elantraTrain)
+```
+
+Test model
+
+```{r}
+salesPred <- predict(salesReg4, newdata=elantraTest)
+SSE <- sum((salesPred - elantraTest$ElantraSales)^2)
+SST <- sum((mean(elantraTrain$ElantraSales) - elantraTest$ElantraSales)^2)
+1-SSE/SST
+max(abs(salesPred - elantraTest$ElantraSales))
+elantraTest[which.max(abs(salesPred - elantraTest$ElantraSales)), c("Month", "Year")]
+```
+

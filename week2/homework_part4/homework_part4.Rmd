@@ -1,0 +1,36 @@
+---
+title: "Homework Part4"
+author: "Lin Tian"
+date: "6/14/2015"
+output: html_document
+---
+
+```{r}
+data(state)
+statedata <- cbind(data.frame(state.x77), state.abb, state.area, state.center,  state.division, state.name, state.region)
+library(ggplot2)
+ggplot(data=statedata, aes(x, y)) + geom_point()
+which.max(tapply(statedata$HS.Grad, statedata$state.region, mean))
+ggplot(data=statedata, aes(x=state.region, y=Murder)) + geom_boxplot()  + geom_point()
+statedata[which.max(statedata[, "state.region"]), "state.name"]
+state.northeast <- subset(statedata, state.region=="Northeast")
+state.northeast[which.max(state.northeast$Murder), "state.name"]
+```
+
+Build model
+
+```{r}
+lifeReg <- lm(Life.Exp ~ Population + Income + Illiteracy + Murder + HS.Grad + Frost + Area, data=statedata)
+summary(lifeReg)
+ggplot(data=statedata, aes(x=Income, y=Life.Exp)) + geom_point()
+cor.test(statedata$Income, statedata$Life.Exp)
+lifeReg2 <- step(lifeReg, direction="backward")
+which.min(predict(lifeReg2))
+statedata[which.min(statedata$Life.Exp), "state.name"]
+which.max(predict(lifeReg2))
+statedata[which.max(statedata$Life.Exp), "state.name"]
+which.min(abs(lifeReg2$residuals))
+which.max(abs(lifeReg2$residuals))
+```
+
+
