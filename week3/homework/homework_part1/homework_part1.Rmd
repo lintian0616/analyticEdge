@@ -1,0 +1,52 @@
+---
+title: "Homework Part1"
+author: "Lin Tian"
+date: "6/19/2015"
+output: html_document
+---
+
+Read csv file
+
+```{r}
+setwd("~/analyticEdge/week3/homework/homework_part1")
+songs <- read.csv("songs.csv", as.is=TRUE)
+sum(songs$year==2010)
+sum(songs$artistname=="Michael Jackson")
+table(songs$artistname=="Michael Jackson", songs$Top10==1)
+songs[songs$artistname=="Michael Jackson" &songs$Top10==1, "songtitle"]
+table(songs$timesignature)
+songs$songtitle[which.max(songs$tempo)]
+```
+
+Split the dataset
+
+```{r}
+SongsTrain <- subset(songs, year <= 2009)
+SongsTest <- subset(songs, year == 2010)
+```
+
+Build the model
+
+```{r}
+nonvars <- c("year", "songtitle", "artistname", "songID", "artistID")
+SongsTrain <- SongsTrain[ , !(names(SongsTrain) %in% nonvars) ]
+SongsTest <- SongsTest[ , !(names(SongsTest) %in% nonvars) ]
+SongsLog1 <- glm(Top10 ~ ., data=SongsTrain, family="binomial")
+summary(SongsLog1)
+cor.test(SongsTrain$loudness, SongsTrain$energy)
+
+SongsLog2 <- glm(Top10 ~ . - loudness, data=SongsTrain, family=binomial)
+SongsLog3 <- glm(Top10 ~ . - energy, data=SongsTrain, family=binomial)
+```
+
+Make Prediction with **SongsLog3**
+
+```{r}
+predTest <- predict(SongsLog3, newdata=SongsTest, type="response")
+table(SongsTest$Top10, predTest > 0.45)
+sum(diag(table(SongsTest$Top10, predTest > 0.45)))/sum(table(SongsTest$Top10, predTest > 0.45))
+# Baseline
+table(SongsTest$Top10)
+```
+
+
