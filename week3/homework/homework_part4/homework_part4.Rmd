@@ -1,0 +1,67 @@
+---
+title: "Homework Part4"
+author: "Lin Tian"
+date: "6/23/2015"
+output: html_document
+---
+
+Read dataset
+
+```{r}
+setwd("~/analyticEdge/week3/homework/homework_part4")
+baseball <- read.csv("baseball.csv", as.is=TRUE)
+length(table(baseball$Year))
+```
+
+Subset data
+
+```{r}
+baseball <- subset(baseball, Playoffs==1)
+PlayoffTable <- table(baseball$Year)
+names(PlayoffTable)
+baseball$NumCompetitors <- PlayoffTable[as.character(baseball$Year)]
+sum(baseball$NumCompetitors==8)
+```
+
+Predict Models
+
+```{r}
+baseball$WorldSeries <- as.numeric(baseball$RankPlayoffs == 1)
+sum(baseball$WorldSeries==0)
+
+keep.variables <- c("Year", "RS", "RA", "W", "OBP", "SLG", "BA", "RankSeason", "OOBP", "OSLG", "NumCompetitors", "League")
+keep <- baseball[, keep.variables]
+for (i in keep.variables) {
+  mod <- glm(baseball$WorldSeries ~ keep[, i], family="binomial")
+  if (summary(mod)$coef[2, 4] < 0.05) {
+    print(i)
+  }
+}
+sig.var <- c("Year", "RA", "RankSeason", "NumCompetitors")
+mod <- glm(WorldSeries ~ Year + RA + RankSeason + NumCompetitors, data=baseball, family="binomial")
+summary(mod)
+
+cor(baseball[, sig.var])
+```
+
+Compare AIC
+
+```{r}
+sig.baseball <- baseball[, sig.var]
+AICs <- c()
+var.pairs <- list()
+pos <- 1
+for (i in seq(2)) {
+  permutate <- combn(4, i)
+  for (j in seq(ncol(permutate))) {
+    select <- as.data.frame(cbind(sig.baseball[, permutate[, j]], baseball[, "WorldSeries"]))
+    colnames(select)[ncol(select)] <- "WorldSeries"
+    var.pairs[[pos]] <- sig.var[permutate[, j]]
+    AICs <- c(AICs, extractAIC(glm(WorldSeries ~ ., data=select, family="binomial"))[2])
+    pos <- pos + 1
+  }
+}
+var.pairs[[which.min(AICs)]]
+```
+
+
