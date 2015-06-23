@@ -1,0 +1,85 @@
+---
+title: "Homework Part3"
+author: "Lin Tian"
+date: "6/21/2015"
+output: html_document
+---
+
+Read dataset
+
+```{r}
+setwd("~/analyticEdge/week3/homework/homework_part3")
+loans <- read.csv("loans.csv", as.is=TRUE)
+mean(loans$not.fully.paid)
+summary(loans)
+```
+
+Imupute NA values
+
+```{r}
+library(mice)
+set.seed(144)
+vars.for.imputation <- setdiff(names(loans), "not.fully.paid")
+imputed = complete(mice(loans[vars.for.imputation]))
+loans[vars.for.imputation] = imputed
+```
+
+## We can start the Problem 2 from **loans_imputed.csv**.
+
+```{r}
+loans <- read.csv("loans_imputed.csv", as.is=TRUE)
+
+library(caTools)
+set.seed(144)
+split <- sample.split(loans$not.fully.paid, SplitRatio=0.7)
+train <- loans[split, ]
+test <- loans[!split, ]
+
+logRegTrain <- glm(not.fully.paid ~ ., data=train, family="binomial")
+summary(logRegTrain)
+
+test$predicted.risk <- predict(logRegTrain, newdata=test, type="response")
+table(test$not.fully.paid, test$predicted.risk > 0.5)
+```
+
+ROCR
+
+```{r}
+library(ROCR)
+ROCRpred <- prediction(test$predicted.risk, test$not.fully.paid)
+as.numeric(performance(ROCRpred, "auc")@y.values)
+```
+
+SMART baseline
+
+```{r}
+baseLogReg <- glm(not.fully.paid ~ int.rate, data=train, family="binomial")
+summary(baseLogReg)
+library(corrplot)
+corrplot(cor(train[, -2]), method = "circle")
+
+basePred <- predict(baseLogReg, newdata=test, type="response")
+ROCRbasepred <- prediction(basePred, test$not.fully.paid)
+as.numeric(performance(ROCRbasepred, "auc")@y.values)
+```
+
+Profit
+
+```{r}
+test$profit <- 10*(exp(test$int.rate*3) - 1)
+test$profit[test$not.fully.paid == 1] <- -10
+
+highInterest <- subset(test, int.rate >= 0.15)
+mean(highInterest$profit)
+mean(highInterest$not.fully.paid)
+```
+
+AN INVESTMENT STRATEGY BASED ON RISK
+
+```{r}
+cutoff <- sort(highInterest$predicted.risk, decreasing=FALSE)[100]
+selectedLoans <- subset(highInterest, highInterest$predicted.risk <= cutoff)
+sum(selectedLoans$profit)/10
+sum(selectedLoans$not.fully.paid)
+```
+
