@@ -1,0 +1,62 @@
+---
+title: "Homework Part2"
+author: "Lin Tian"
+date: "6/26/2015"
+output: html_document
+---
+
+Read data
+```{r}
+setwd("~/analyticEdge/week4/homework/homework_part2")
+letters <- read.csv("letters_ABPR.csv")
+library(caTools)
+letters$isB <- as.factor(letters$letter == "B")
+set.seed(1000)
+spl <- sample.split(letters$isB, SplitRatio=0.5)
+train <- subset(letters, spl==TRUE)
+test <- subset(letters, spl==FALSE)
+table(test$isB)
+```
+
+Predict whether is B or not B -- CART
+
+```{r}
+library(rpart)
+library(rpart.plot)
+CARTb <- rpart(isB ~ . - letter, data=train, method="class")
+predictTest <- predict(CARTb, newdata=test, type="class")
+predTestOutcome <- table(test$isB, predictTest)
+predTestAccuracy <- sum(diag(predTestOutcome))/sum(predTestOutcome)
+```
+
+Predict whether is B or not B -- Random Forest
+
+```{r}
+library(randomForest)
+set.seed(1000)
+isBForest <- randomForest(isB ~ . - letter, data=train)
+predictTestForest <- predict(isBForest, newdata=test)
+table(test$isB, predictTestForest)
+```
+
+PREDICTING THE LETTERS A, B, P, R
+
+```{r}
+letters$letter <- as.factor(letters$letter)
+set.seed(2000)
+spl <- sample.split(letters$letter, SplitRatio=0.5)
+train <- subset(letters, spl==TRUE)
+test <- subset(letters, spl==FALSE)
+
+CARTletter <- rpart(letter ~ . - isB, data=train, method="class")
+predictTest <- predict(CARTletter, newdata=test, type="class")
+predTestOutcome <- table(test$letter, predictTest)
+predTestAccuracy <- sum(diag(predTestOutcome))/sum(predTestOutcome)
+
+set.seed(1000)
+forestLetter <- randomForest(letter ~ . - isB, data=train)
+predictTestForest <- predict(forestLetter, newdata=test)
+outcome <- table(test$letter, predictTestForest)
+sum(diag(outcome))/sum(outcome)
+```
+
