@@ -1,0 +1,76 @@
+---
+title: "Homework Part3"
+author: "Lin Tian"
+date: "6/26/2015"
+output: html_document
+---
+
+Read data
+
+```{r}
+setwd("~/analyticEdge/week4/homework/homework_part3")
+census <- read.csv("census.csv")
+
+library(caTools)
+set.seed(2000)
+spl <- sample.split(census$over50k, SplitRatio=0.6)
+train <- subset(census, spl==TRUE)
+test <- subset(census, spl==FALSE)
+over50kGLM <- glm(over50k ~ ., data=train, family = binomial)
+predictGLM <- predict(over50kGLM, newdata=test, type="response")
+table(test$over50k, predictGLM>0.5)
+library(ROCR)
+ROCRpred <- prediction(predictGLM, test$over50k)
+as.numeric(performance(ROCRpred, "auc")@y.values)
+ROCRperf <- performance(ROCRpred, "tpr", "fpr")
+plot(ROCRperf)
+abline(a=0, b=1)
+```
+
+CART model
+
+```{r}
+library(rpart.plot)
+cart.census <- rpart(over50k ~ ., data=train, method="class")
+prp(cart.census)
+predictCART <- predict(cart.census, newdata=test)
+table(test$over50k, predictCART[, 2] > 0.5)
+ROCRpred2 <- prediction(predictCART[, 2], test$over50k)
+as.numeric(performance(ROCRpred2, "auc")@y.values)
+ROCRperf2 <- performance(ROCRpred2, "tpr", "fpr")
+plot(ROCRperf2)
+abline(a=0, b=1)
+```
+
+Random Forest Model
+
+```{r}
+library(randomForest)
+set.seed(1)
+trainSmall <- train[sample(nrow(train), 2000), ]
+set.seed(1)
+rf.census <- randomForest(over50k ~ ., data=trainSmall)
+PredictRF <- predict(rf.census, newdata=test)
+table(test$over50k, PredictRF)
+vu <- varUsed(rf.census, count=TRUE)
+vusorted <- sort(vu, decreasing = FALSE, index.return = TRUE)
+dotchart(vusorted$x, names(rf.census$forest$xlevels[vusorted$ix]))
+varImpPlot(rf.census)
+```
+
+CROSS-VALIDATION
+
+```{r}
+library(caret)
+library(e1071)
+numFolds <- trainControl(method="cv", number=10)
+cartGrid <- expand.grid( .cp = seq(0.002,0.1,0.002))
+set.seed(2)
+tr <- train(over50k ~ ., data=train, method="rpart", trControl=numFolds, tuneGrid=cartGrid)
+tr
+censusCV <- rpart(over50k ~ ., data=train, method="class", cp=0.002)
+predictBestTree <- predict(censusCV, newdata=test)
+table(test$over50k, predictBestTree[, 2] > 0.5)
+```
+
+
