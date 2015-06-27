@@ -1,0 +1,68 @@
+---
+title: "Homework Part4"
+author: "Lin Tian"
+date: "6/27/2015"
+output: html_document
+---
+
+Read data
+
+```{r}
+setwd("~/analyticEdge/week4/homework/homework_part4")
+data(state)
+statedata <- data.frame(state.x77)
+str(statedata)
+```
+
+Linear regression model
+
+```{r}
+lifelm <- lm(Life.Exp ~ ., data=statedata)
+summary(lifelm)
+sum(lifelm$residuals^2)
+
+lifelm2 <- lm(Life.Exp ~ Population+Murder+Frost+HS.Grad, data=statedata)
+summary(lifelm2)
+sum(lifelm2$residuals^2)
+```
+
+CART
+
+```{r}
+library(rpart.plot)
+lifeCART <- rpart(Life.Exp ~ ., data=statedata)
+prp(lifeCART)
+sum((predict(lifeCART) - statedata$Life.Exp)^2)
+
+lifeCART2 <- rpart(Life.Exp ~ ., data=statedata, minbucket=5)
+prp(lifeCART2)
+sum((predict(lifeCART2) - statedata$Life.Exp)^2)
+
+lifeCART3 <- rpart(Life.Exp ~ Area, data=statedata, minbucket=1)
+prp(lifeCART3)
+sum((predict(lifeCART3) - statedata$Life.Exp)^2)
+```
+
+Cross validation
+
+```{r}
+library(caret)
+library(e1071)
+set.seed(111)
+numFolds <- trainControl(method="cv", number=10)
+cpGrid <- expand.grid(.cp=seq(0.01, 0.5, 0.01))
+tr <- train(Life.Exp ~ ., data=statedata, method="rpart", trControl=numFolds, tuneGrid=cpGrid)
+tr
+
+lifeCART4 <- rpart(Life.Exp ~ ., data=statedata, cp=0.11)
+prp(lifeCART4)
+sum((predict(lifeCART4) - statedata$Life.Exp)^2)
+
+set.seed(111)
+tr2 <- train(Life.Exp ~ Area, data=statedata, method="rpart", trControl=numFolds, tuneGrid=cpGrid)
+tr2
+lifeCART5 <- rpart(Life.Exp ~ Area, data=statedata, cp=0.06)
+prp(lifeCART5)
+sum((predict(lifeCART5) - statedata$Life.Exp)^2)
+```
+
