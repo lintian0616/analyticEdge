@@ -62,3 +62,44 @@ predTest <- predict(wikiCART, newdata=test, type="class")
 table(test$Vandal, predTest)
 ```
 
+Improve the model -- Step1
+
+```{r}
+wikiWords2 <- wikiWords
+wikiWords2$HTTP <- ifelse(grepl("http",wiki$Added,fixed=TRUE), 1, 0)
+wikiTrain2 <- subset(wikiWords2, spl==TRUE)
+wikiTest2 <- subset(wikiWords2, spl==FALSE)
+wikiCART2 <- rpart(Vandal ~ ., data=wikiTrain2, method="class")
+prp(wikiCART2)
+predTest2 <- predict(wikiCART2, newdata=wikiTest2, type="class")
+table(test$Vandal, predTest2)
+```
+
+Improve the model -- Step2
+
+```{r}
+wikiWords2$NumWordsAdded <- rowSums(as.matrix(dtmAdded))
+wikiWords2$NumWordsRemoved <- rowSums(as.matrix(dtmRemoved))
+wikiTrain2 <- subset(wikiWords2, spl==TRUE)
+wikiTest2 <- subset(wikiWords2, spl==FALSE)
+wikiCART2 <- rpart(Vandal ~ ., data=wikiTrain2, method="class")
+prp(wikiCART2)
+predTest2 <- predict(wikiCART2, newdata=wikiTest2, type="class")
+table(test$Vandal, predTest2)
+```
+
+Improve the model -- Step3
+
+```{r}
+wikiWords3 <- wikiWords2
+wikiWords3$Minor <- wiki$Minor
+wikiWords3$Loggedin <- wiki$Loggedin
+wikiTrain3 <- subset(wikiWords3, spl==TRUE)
+wikiTest3 <- subset(wikiWords3, spl==FALSE)
+wikiCART3 <- rpart(Vandal ~ ., data=wikiTrain3, method="class")
+prp(wikiCART3)
+predTest3 <- predict(wikiCART3, newdata=wikiTest3, type="class")
+table(test$Vandal, predTest3)
+```
+
+
