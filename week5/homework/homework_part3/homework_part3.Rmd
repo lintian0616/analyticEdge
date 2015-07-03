@@ -81,4 +81,25 @@ table(test$spam, predict(spamRF, newdata=test, type="prob")[,2]>0.5)
 as.numeric(performance(prediction(predict(spamRF, newdata=test, type="prob")[,2], test$spam), "auc")@y.values)
 ```
 
+## Homework Part4
+
+```{r}
+wordCount <- rowSums(as.matrix(dtm))
+hist(wordCount)
+hist(log(wordCount))
+emailsSparse$logWordCount <- log(wordCount)
+boxplot(logWordCount ~ spam, data=emailsSparse)
+
+train2 <- emailsSparse[spl, ]
+test2 <- emailsSparse[!spl, ]
+spam2CART <- rpart(spam ~ ., data=train2, method="class")
+table(test2$spam, predict(spam2CART, newdata=test2)[,2]>0.5)
+as.numeric(performance(prediction(predict(spam2CART, newdata=test2)[,2], test2$spam), "auc")@y.values)
+
+prp(spam2CART)
+set.seed(123)
+spam2RF <- randomForest(spam~., data=train2)
+table(test2$spam, predict(spam2RF, newdata=test2, type="prob")[,2]>0.5)
+as.numeric(performance(prediction(predict(spam2RF, newdata=test2, type="prob")[,2], test2$spam), "auc")@y.values)
+```
 
