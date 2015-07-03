@@ -1,0 +1,71 @@
+---
+title: "Homework Part2"
+author: "Lin Tian"
+date: "7/4/2015"
+output: html_document
+---
+
+Read dataset
+
+```{r}
+setwd("~/analyticEdge/week5/homework/homework_part2")
+trials <- read.csv("clinical_trial.csv", as.is=TRUE)
+max(sapply(trials$abstract, nchar))
+sum(sapply(trials$abstract, nchar)==0)
+trials$title[which.min(sapply(trials$title, nchar))]
+```
+
+Build corpus
+
+```{r}
+library(tm)
+library(SnowballC)
+corpusTitle <- Corpus(VectorSource(trials$title))
+corpusAbstract <- Corpus(VectorSource(trials$abstract))
+corpusTitle <- tm_map(corpusTitle, tolower)
+corpusAbstract <- tm_map(corpusAbstract, tolower)
+corpusTitle <- tm_map(corpusTitle, PlainTextDocument)
+corpusAbstract <- tm_map(corpusAbstract, PlainTextDocument)
+corpusTitle <- tm_map(corpusTitle, removePunctuation)
+corpusAbstract <- tm_map(corpusAbstract, removePunctuation)
+corpusTitle <- tm_map(corpusTitle, removeWords, stopwords("english"))
+corpusAbstract <- tm_map(corpusAbstract, removeWords, stopwords("english"))
+corpusTitle <- tm_map(corpusTitle, stemDocument)
+corpusAbstract <- tm_map(corpusAbstract, stemDocument)
+dtmTitle <- DocumentTermMatrix(corpusTitle)
+dtmAbstract <- DocumentTermMatrix(corpusAbstract)
+dtmTitle <- removeSparseTerms(dtmTitle, 0.95)
+dtmAbstract <- removeSparseTerms(dtmAbstract, 0.95)
+dtmTitle <- as.data.frame(as.matrix(dtmTitle))
+dtmAbstract <- as.data.frame(as.matrix(dtmAbstract))
+
+## most frequent words:
+colnames(dtmAbstract)[which.max(colSums(dtmAbstract))]
+
+# combine datasets
+colnames(dtmTitle) <- paste0("T", colnames(dtmTitle))
+colnames(dtmAbstract) <- paste0("A", colnames(dtmAbstract))
+dtm <- cbind(dtmTitle, dtmAbstract)
+dtm$trial <- trials$trial
+```
+
+Build the model
+
+```{r}
+library(caTools)
+set.seed(144)
+spl <- sample.split(dtm$trial, SplitRatio = 0.7)
+train <- dtm[spl, ]
+test <- dtm[!spl, ]
+
+library(rpart.plot)
+trialCART <- rpart(trial ~ ., data=train, method="class")
+prp(trialCART)
+max(predict(trialCART)[, 2])
+table(train$trial, predict(trialCART, type="class"))
+table(test$trial, predict(trialCART, newdata=test, type="class"))
+
+library(ROCR)
+as.numeric(performance(prediction(predict(trialCART, newdata=test)[, 2], test$trial), "auc")@y.values)
+```
+
