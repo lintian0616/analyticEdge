@@ -1,0 +1,64 @@
+---
+title: "Homework Part1"
+author: "Lin Tian"
+date: "7/3/2015"
+output: html_document
+---
+
+Read data
+
+```{r}
+setwd("~/analyticEdge/week5/homework/homework_part1")
+wiki <- read.csv("wiki.csv", as.is = TRUE)
+sum(wiki$Vandal==1)
+```
+
+Create corpusAdded
+
+```{r}
+library(tm)
+corpusAdded <- Corpus(VectorSource(wiki$Added))
+corpusAdded <- tm_map(corpusAdded, PlainTextDocument)
+corpusAdded <- tm_map(corpusAdded, removeWords, stopwords("english"))
+corpusAdded <- tm_map(corpusAdded, stemDocument)
+dtmAdded <- DocumentTermMatrix(corpusAdded)
+sparseAdded <- removeSparseTerms(dtmAdded, 0.997)
+wordsAdded <- as.data.frame(as.matrix(sparseAdded))
+colnames(wordsAdded) = paste("A", colnames(wordsAdded))
+```
+
+Create corpusRemoved
+
+```{r}
+corpusRemoved <- Corpus(VectorSource(wiki$Removed))
+corpusRemoved <- tm_map(corpusRemoved, PlainTextDocument)
+corpusRemoved <- tm_map(corpusRemoved, removeWords, stopwords("english"))
+corpusRemoved <- tm_map(corpusRemoved, stemDocument)
+dtmRemoved <- DocumentTermMatrix(corpusRemoved)
+sparseRemoved <- removeSparseTerms(dtmRemoved, 0.997)
+wordsRemoved <- as.data.frame(as.matrix(sparseRemoved))
+colnames(wordsRemoved) = paste("R", colnames(wordsRemoved))
+```
+
+Combine Added and Removed
+
+```{r}
+wikiWords <- cbind(wordsAdded, wordsRemoved)
+wikiWords$Vandal <- wiki$Vandal
+library(caTools)
+set.seed(123)
+spl <- sample.split(wiki$Vandal, SplitRatio = 0.7)
+train <- subset(wikiWords, spl==TRUE)
+test <- subset(wikiWords, spl==FALSE)
+```
+
+CART model
+
+```{r}
+library(rpart.plot)
+wikiCART <- rpart(Vandal ~ ., data=train, method="class")
+prp(wikiCART)
+predTest <- predict(wikiCART, newdata=test, type="class")
+table(test$Vandal, predTest)
+```
+
