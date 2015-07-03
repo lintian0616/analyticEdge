@@ -1,0 +1,84 @@
+---
+title: "Homework Part3"
+author: "Lin Tian"
+date: "7/4/2015"
+output: html_document
+---
+
+Read dataset
+
+```{r}
+setwd("~/analyticEdge/week5/homework/homework_part3")
+emails <- read.csv("emails.csv", as.is=TRUE)
+nrow(emails)
+sum(emails$spam==1)
+max(sapply(emails$text, nchar))
+which.min(sapply(emails$text, nchar))
+```
+
+Build corpus
+
+```{r}
+library(tm)
+library(SnowballC)
+corpus <- Corpus(VectorSource(emails$text))
+corpus <- tm_map(corpus, tolower)
+corpus <- tm_map(corpus, PlainTextDocument)
+corpus <- tm_map(corpus, removePunctuation)
+corpus <- tm_map(corpus, removeWords, stopwords("english"))
+corpus <- tm_map(corpus, stemDocument)
+dtm <- DocumentTermMatrix(corpus)
+ncol(dtm)
+spdtm <- removeSparseTerms(dtm, 0.95)
+ncol(spdtm)
+emailsSparse <- as.data.frame(as.matrix(spdtm))
+colnames(emailsSparse) <- make.names(colnames(emailsSparse))
+which.max(colSums(emailsSparse))
+emailsSparse$spam <- emails$spam
+sum(colSums(emailsSparse[emailsSparse$spam==0, -ncol(emailsSparse)]) > 5000)
+sum(colSums(emailsSparse[emailsSparse$spam==1, -ncol(emailsSparse)]) > 1000)
+```
+
+Build models
+
+```{r}
+library(ROCR)
+emailsSparse$spam <- as.factor(emailsSparse$spam)
+library(caTools)
+set.seed(123)
+spl <- sample.split(emailsSparse$spam, 0.7)
+train <- emailsSparse[spl, ]
+test <- emailsSparse[!spl, ]
+
+## Logistic Regression Model
+spamLog <- glm(spam ~ ., family=binomial, data=train)
+sum(predict(spamLog, type="response")<0.00001)
+sum(predict(spamLog, type="response")>0.99999)
+sum(predict(spamLog, type="response")>=0.00001 & predict(spamLog, type="response")<=0.99999)
+sum(coef(summary(spamLog))[, 4] < 0.05)
+table(train$spam, predict(spamLog, type="response")>0.5)
+as.numeric(performance(prediction(predict(spamLog, type="response"), train$spam), "auc")@y.values)
+table(test$spam, predict(spamLog, newdata=test, type="response")>0.5)
+as.numeric(performance(prediction(predict(spamLog, newdata=test, type="response"), test$spam), "auc")@y.values)
+
+## CART Model
+library(rpart.plot)
+spamCART <- rpart(spam ~ ., data=train, method="class")
+head(predict(spamCART)[,2])
+prp(spamCART)
+table(train$spam, predict(spamCART)[,2]>0.5)
+as.numeric(performance(prediction(predict(spamCART)[,2], train$spam), "auc")@y.values)
+table(test$spam, predict(spamCART, newdata=test)[,2]>0.5)
+as.numeric(performance(prediction(predict(spamCART, newdata=test)[,2], test$spam), "auc")@y.values)
+
+## Random Forest Model
+library(randomForest)
+set.seed(123)
+spamRF <- randomForest(spam ~ ., data=train)
+table(train$spam, predict(spamRF, type="prob")[,2]>0.5)
+as.numeric(performance(prediction(predict(spamRF, type="prob")[,2], train$spam), "auc")@y.values)
+table(test$spam, predict(spamRF, newdata=test, type="prob")[,2]>0.5)
+as.numeric(performance(prediction(predict(spamRF, newdata=test, type="prob")[,2], test$spam), "auc")@y.values)
+```
+
+
