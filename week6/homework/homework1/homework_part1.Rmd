@@ -1,0 +1,36 @@
+---
+title: "Homework Part1"
+author: "Lin Tian"
+date: "7/8/2015"
+output: html_document
+---
+
+Read dataset and calculate the distance
+
+```{r}
+setwd("~/analyticEdge/week6/homework/homework1")
+dailykos <- read.csv("dailykos.csv")
+library(amap)
+distances <- Dist(dailykos, method="euclidean")
+```
+
+Cluster the observations
+
+```{r}
+clusterdailykos <- hclust(distances, method="ward.D")
+plot(as.dendrogram(clusterdailykos))
+rect.hclust(clusterdailykos, k=7, border = "red")
+clusterGroups <- cutree(clusterdailykos, k=7)
+table(clusterGroups)
+lapply(split(dailykos, cutree(clusterdailykos, k=7)), function(x) tail(sort(colMeans(x))))
+```
+
+K-means clustering
+
+```{r}
+set.seed(1000)
+kmeansDaily <- kmeans(dailykos, centers = 7)
+kmeansDaily$size
+apply(kmeansDaily$centers, 1, function(x) colnames(dailykos)[tail(order(x))])
+```
+

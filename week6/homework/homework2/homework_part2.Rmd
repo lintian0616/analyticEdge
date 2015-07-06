@@ -1,0 +1,47 @@
+---
+title: "Homework Part2"
+author: "Lin Tian"
+date: "7/9/2015"
+output: html_document
+---
+
+Read dataset
+
+```{r}
+setwd("~/analyticEdge/week6/homework/homework2")
+airlines <- read.csv("AirlinesCluster.csv")
+summary(airlines)
+```
+
+Normalize dataset
+
+```{r}
+library(caret)
+preproc <- preProcess(airlines)
+airlinesNorm <- predict(preproc, airlines)
+## This is same with airlinesNorm <- scale(airlines)
+```
+
+Hierarchical Clustering
+
+```{r}
+library(amap)
+distances <- Dist(airlinesNorm, method="euclidean")
+clusterAirlines <- hclust(distances, method="ward.D")
+plot(as.dendrogram(clusterAirlines))
+clusterGroups <- cutree(clusterAirlines, k=5)
+sum(clusterGroups == 1)
+
+spl <- split(airlines, clusterGroups)
+elements <- lapply(spl, colMeans)
+```
+
+K-means Clustering
+
+```{r}
+set.seed(88)
+KMC <- kmeans(airlinesNorm, centers = 5, iter.max = 1000)
+KMC$size
+KMC$centers
+```
+
