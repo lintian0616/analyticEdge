@@ -1,0 +1,51 @@
+---
+title: "Homework Part2"
+author: "Lin Tian"
+date: "7/24/2015"
+output: html_document
+---
+
+Read dataset
+
+```{r}
+setwd("~/analyticEdge/week7/homework_part2")
+edges <- read.csv("edges.csv")
+users <- read.csv("users.csv")
+table(users[users$school!="", "locale"])
+table(users$gender, users$school)
+```
+
+Convert data to iGraph object
+
+```{r}
+library(igraph)
+g <- graph.data.frame(d=edges, directed=FALSE, vertices=users)
+plot(g, vertex.size=5, vertex.label=NA)
+sum(degree(g) >= 10)
+```
+
+Network visualization
+
+```{r}
+V(g)$size <- degree(g)/2+2
+plot(g, vertex.label=NA)
+
+# Color by gender
+V(g)$color = "black"
+V(g)$color[V(g)$gender == "A"] = "red"
+V(g)$color[V(g)$gender == "B"] = "gray"
+plot(g, vertex.label=NA)
+
+# Color by school
+V(g)$color = "black"
+V(g)$color[V(g)$school == "A"] = "grey"
+V(g)$color[V(g)$school == "AB"] = "red"
+plot(g, vertex.label=NA)
+
+# Color by locale
+V(g)$color = "black"
+V(g)$color[V(g)$locale == "A"] = "grey"
+V(g)$color[V(g)$locale == "B"] = "red"
+plot(g, vertex.label=NA, edge.width=2)
+```
+
