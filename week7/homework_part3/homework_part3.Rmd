@@ -1,0 +1,26 @@
+---
+title: "Homework Part3"
+author: "Lin Tian"
+date: "7/24/2015"
+output: html_document
+---
+
+Read dataset
+
+```{r}
+setwd("~/analyticEdge/week7/homework_part3")
+library(tm)
+library(SnowballC)
+tweets <- read.csv("tweets.csv", as.is=TRUE)
+corpus <- Corpus(VectorSource(tweets$Tweet))
+corpus <- tm_map(corpus, tolower)
+corpus <- tm_map(corpus, PlainTextDocument)
+corpus <- tm_map(corpus, removePunctuation)
+corpus <- tm_map(corpus, removeWords, stopwords("english"))
+frequencies <- DocumentTermMatrix(corpus)
+allTweets <- as.data.frame(as.matrix(frequencies))
+colnames(allTweets) <- make.names(colnames(allTweets))
+ncol(allTweets)
+write.csv2(data.frame(words=colnames(allTweets), weights=colSums(allTweets)), row.names=FALSE, quote=FALSE, file="TweetsProcess.csv")
+```
+
