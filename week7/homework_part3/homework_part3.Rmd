@@ -24,3 +24,23 @@ ncol(allTweets)
 write.csv2(data.frame(words=colnames(allTweets), weights=colSums(allTweets)), row.names=FALSE, quote=FALSE, file="TweetsProcess.csv")
 ```
 
+Plot word cloud
+
+```{r}
+library(wordcloud)
+wordcloud(colnames(allTweets), colSums(allTweets), scale=c(2, 0.25))
+# Remove the most frequent word
+corpus <- Corpus(VectorSource(tweets$Tweet))
+corpus <- tm_map(corpus, tolower)
+corpus <- tm_map(corpus, PlainTextDocument)
+corpus <- tm_map(corpus, removePunctuation)
+corpus <- tm_map(corpus, removeWords, c("apple", stopwords("english")))
+frequencies <- DocumentTermMatrix(corpus)
+allTweets <- as.data.frame(as.matrix(frequencies))
+colnames(allTweets) <- make.names(colnames(allTweets))
+wordcloud(colnames(allTweets), colSums(allTweets), scale=c(2, 0.25))
+# Select a color palette
+pal <- brewer.pal(n = 8, name = 'Blues')[c(-1, -2, -3, -4)]
+wordcloud(colnames(allTweets), colSums(allTweets), scale=c(2, 0.25), colors=pal)
+```
+
