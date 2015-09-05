@@ -1,0 +1,47 @@
+---
+title: "Final Exam Part1"
+author: "Lin Tian"
+date: "8/23/2015"
+output: html_document
+---
+
+Set working directory and read dataset
+
+```{r}
+setwd("~/analyticEdge/final/part1")
+movies <- read.csv("Movies.csv")
+
+train <- subset(movies, Year < 2010)
+test <- subset(movies, Year >= 2010)
+```
+
+Build linear model
+
+```{r}
+linearMod <- lm(Worldwide ~ . , data=train[ , 3:ncol(train)])
+cor.test(train$Worldwide, train$Production.Budget)
+
+linearMod2 <- lm(Worldwide ~ Runtime + Crime + Horror + Animation + History + Nominations + Production.Budget, data=train[ , 3:ncol(train)])
+```
+
+Build CART model
+
+```{r}
+movies$Performance <- factor(ifelse(movies$Worldwide > quantile(movies$Worldwide, .75), "Excellent", ifelse(movies$Worldwide > quantile(movies$Worldwide, .25), "Average", "Poor")))
+movies$Worldwide <- NULL
+
+library(caTools)
+set.seed(15071)
+spl <- sample.split(movies$Performance, SplitRatio=0.7)
+trainCART <- subset(movies, spl==TRUE)
+testCART <- subset(movies, spl==FALSE)
+
+library(rpart)
+library(rpart.plot)
+moviesTree <- rpart(Performance ~ . , data=trainCART[ , 3:ncol(trainCART)])
+prp(moviesTree)
+table(predict(moviesTree, type="class"), trainCART$Performance)
+
+table(predict(moviesTree, newdata=testCART, type="class"), testCART$Performance)
+```
+

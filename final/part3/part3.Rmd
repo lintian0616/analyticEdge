@@ -1,0 +1,61 @@
+---
+title: "Final Part3"
+author: "Lin Tian"
+date: "8/23/2015"
+output: html_document
+---
+
+Set working directory and read dataset
+
+```{r}
+setwd("~/analyticEdge/final/part3")
+households <- read.csv("Households.csv")
+sum(households$MorningPct>= 100)
+sum(households$AfternoonPct>= 100)
+
+min(households[households$AvgSalesValue>150, "AvgDiscount"])
+min(households[households$AvgDiscount>25, "AvgSalesValue"])
+mean(households$NumVisits>=300)
+```
+
+Clustering No Normalization
+
+```{r}
+library(amap)
+distances <- Dist(households, method="euclidean")
+clusters <- hclust(distances, method="ward.D")
+plot(as.dendrogram(clusters))
+```
+
+Clustering Normalization
+
+```{r}
+library(caret)
+preproc <- preProcess(households)
+householdsNorm = predict(preproc, households)
+max(householdsNorm$NumVisits)
+min(householdsNorm$AfternoonPct)
+
+set.seed(200)
+distancesNorm <- Dist(householdsNorm, method = "euclidean")
+ClusterShoppers <- hclust(distancesNorm, method = "ward.D")
+plot(ClusterShoppers, labels = FALSE)
+abline(h=375, col="red")
+```
+
+Kmeans clustering
+
+```{r}
+set.seed(200)
+kmeansHouseholds <- kmeans(householdsNorm, centers = 10)
+min(kmeansHouseholds$size)
+max(kmeansHouseholds$size)
+kmeansHouseholds$centers
+
+set.seed(5000)
+kmeansHouseholds2 <- kmeans(householdsNorm, centers = 5)
+min(kmeansHouseholds2$size)
+max(kmeansHouseholds2$size)
+kmeansHouseholds2$centers
+```
+

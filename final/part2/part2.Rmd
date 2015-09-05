@@ -1,0 +1,59 @@
+---
+title: "Final Part2"
+author: "Lin Tian"
+date: "8/23/2015"
+output: html_document
+---
+
+Set working directory and read dataset
+
+```{r}
+setwd("~/analyticEdge/final/part2")
+fedFunds <- read.csv("federalFundsRate.csv", stringsAsFactors = FALSE)
+table(fedFunds$RaisedFedFunds)
+which.max(table(fedFunds$Chairman))
+
+fedFunds$Chairman <- as.factor(fedFunds$Chairman)
+fedFunds$DemocraticPres <- as.factor(fedFunds$DemocraticPres)
+fedFunds$RaisedFedFunds <- as.factor(fedFunds$RaisedFedFunds)
+```
+
+Build logistic regression model
+
+```{r}
+set.seed(201)
+library(caTools)
+spl = sample.split(fedFunds$RaisedFedFunds, 0.7)
+TrainFed <- subset(fedFunds, spl==TRUE)
+TestFed <- subset(fedFunds, spl==FALSE)
+
+logMod <- glm(RaisedFedFunds ~ PreviousRate + Streak + Unemployment + HomeownershipRate + DemocraticPres + MonthsUntilElection, data=TrainFed, family=binomial)
+
+table(predict(logMod, newdata=TestFed, type="response")>0.5)
+
+library(ROCR)
+predictTest <- predict(logMod, newdata=TestFed, type="response")
+ROCRpredTest <- prediction(predictTest, TestFed$RaisedFedFunds)
+auc <- as.numeric(performance(ROCRpredTest, "auc")@y.values)
+ROCRperf <- performance(ROCRpredTest, "tpr", "fpr")
+plot(ROCRperf, colorize=TRUE, print.cutoffs.at=seq(from=0, to=1, by=0.1), text.adj=c(-0.2, 1.7))
+```
+
+CART model
+
+```{r}
+library(caret)
+library(e1071)
+set.seed(201)
+numFolds <- trainControl(method="cv", number=10)
+cpGrid <- expand.grid(.cp=seq(0.001, 0.5, 0.001))
+tr <- train(RaisedFedFunds ~ PreviousRate+Streak+Unemployment+HomeownershipRate+DemocraticPres+MonthsUntilElection, data=TrainFed, method="rpart", trControl=numFolds, tuneGrid=cpGrid)
+tr
+best.tree <- tr$finalModel
+prp(best.tree)
+colnames(TestFed)[10] <- "DemocraticPres1"
+TestFed$DemocraticPres1 <- as.numeric(as.character(TestFed$DemocraticPres1))
+table(predict(best.tree, newdata=TestFed, type="class"), TestFed$RaisedFedFunds)
+```
+
+
